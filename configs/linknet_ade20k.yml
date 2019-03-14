@@ -6,7 +6,7 @@ data:
     val_split: validation
     img_rows: 'same'
     img_cols: 'same'
-    path: /data/fix_jer/ADE20k
+    path: /data/fix_jer/ADE20K_2016_07_26/
 training:
     train_iters: 300000
     batch_size: 1
