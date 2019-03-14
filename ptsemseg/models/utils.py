@@ -333,7 +333,7 @@ class linknetUp(nn.Module):
         )
 
         # B, C/2, H, W -> B, C/2, H, W
-        self.deconvbnrelu2 = nn.deconv2DBatchNormRelu(
+        self.deconvbnrelu2 = deconv2DBatchNormRelu(
             n_filters / 2, n_filters / 2, k_size=3, stride=2, padding=0
         )
 
