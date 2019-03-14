@@ -4,7 +4,8 @@ data:
     dataset: ade20k
     train_split: training
     val_split: validation
-    img_size: 512
+    img_rows: 512
+    img_cols: 512
     path: /data/fix_jer/ADE20K_2016_07_26/
 training:
     train_iters: 300000
