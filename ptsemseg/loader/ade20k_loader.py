@@ -27,7 +27,7 @@ class ADE20KLoader(data.Dataset):
         self.augmentations = augmentations
         self.img_norm = img_norm
         self.test_mode = test_mode
-        self.n_classes = 150
+        self.n_classes = 151
         self.img_size = img_size if isinstance(img_size, tuple) else (img_size, img_size)
         self.mean = np.array([104.00699, 116.66877, 122.67892])
         self.files = collections.defaultdict(list)
@@ -43,8 +43,9 @@ class ADE20KLoader(data.Dataset):
         return len(self.files[self.split])
 
     def __getitem__(self, index):
+
         img_path = self.files[self.split][index].rstrip()
-        lbl_path = img_path[:-4] + "_seg.png"
+        lbl_path = img_path.replace("/images/", "/annotations/")[:-4]+".png"
 
         img = m.imread(img_path)
         img = np.array(img, dtype=np.uint8)
@@ -61,34 +62,60 @@ class ADE20KLoader(data.Dataset):
         return img, lbl
 
     def transform(self, img, lbl):
-        img = m.imresize(img, (self.img_size[0], self.img_size[1]))  # uint8 with RGB mode
-        img = img[:, :, ::-1]  # RGB -> BGR
+        if len(img.shape)==2:
+            img = img[:,:,np.newaxis]
+            img = np.concatenate((img,img,img),axis=2)
+        else:
+            img = img[:, :, ::-1]
         img = img.astype(np.float64)
         img -= self.mean
-        if self.img_norm:
-            # Resize scales images from 0 to 255, thus we need
-            # to divide by 255.0
-            img = img.astype(float) / 255.0
-        # NHWC -> NCHW
+        img = m.imresize(img, (self.img_size[0], self.img_size[1]))
+        # Resize scales images from 0 to 255, thus we need
+        # to divide by 255.0
+        img = img.astype(float) / 255.0
+        # NHWC -> NCWH
         img = img.transpose(2, 0, 1)
 
-        lbl = self.encode_segmap(lbl)
-        classes = np.unique(lbl)
-        lbl = lbl.astype(float)
-        lbl = m.imresize(lbl, (self.img_size[0], self.img_size[1]), "nearest", mode="F")
+        # lbl = self.encode_segmap(lbl)
+        # classes = np.unique(lbl)
+        # lbl = lbl.astype(float)
+        lbl = m.imresize(lbl, (self.img_size[0], self.img_size[1]), 'nearest', mode='F')
         lbl = lbl.astype(int)
-        assert np.all(classes == np.unique(lbl))
+        # assert(np.all(classes == np.unique(lbl)))
 
         img = torch.from_numpy(img).float()
         lbl = torch.from_numpy(lbl).long()
         return img, lbl
+    
+    # def transform(self, img, lbl):
+    #     img = m.imresize(img, (self.img_size[0], self.img_size[1]))  # uint8 with RGB mode
+    #     img = img[:, :, ::-1]  # RGB -> BGR
+    #     img = img.astype(np.float64)
+    #     img -= self.mean
+    #     if self.img_norm:
+    #         # Resize scales images from 0 to 255, thus we need
+    #         # to divide by 255.0
+    #         img = img.astype(float) / 255.0
+    #     # NHWC -> NCHW
+    #     img = img.transpose(2, 0, 1)
 
-    def encode_segmap(self, mask):
-        # Refer : http://groups.csail.mit.edu/vision/datasets/ADE20K/code/loadAde20K.m
-        mask = mask.astype(int)
-        label_mask = np.zeros((mask.shape[0], mask.shape[1]))
-        label_mask = (mask[:, :, 0] / 10.0) * 256 + mask[:, :, 1]
-        return np.array(label_mask, dtype=np.uint8)
+    #     lbl = self.encode_segmap(lbl)
+    #     classes = np.unique(lbl)
+    #     lbl = lbl.astype(float)
+    #     lbl = m.imresize(lbl, (self.img_size[0], self.img_size[1]), "nearest", mode="F")
+    #     lbl = lbl.astype(int)
+    #     assert np.all(classes == np.unique(lbl))
+
+    #     img = torch.from_numpy(img).float()
+    #     lbl = torch.from_numpy(lbl).long()
+    #     return img, lbl
+
+    # def encode_segmap(self, mask):
+    #     # Refer : http://groups.csail.mit.edu/vision/datasets/ADE20K/code/loadAde20K.m
+    #     mask = mask.astype(int)
+    #     label_mask = np.zeros((mask.shape[0], mask.shape[1]))
+    #     label_mask = (mask[:, :, 0] / 10.0) * 256 + mask[:, :, 1]
+    #     return np.array(label_mask, dtype=np.uint8)
 
     def decode_segmap(self, temp, plot=False):
         # TODO:(@meetshah1995)

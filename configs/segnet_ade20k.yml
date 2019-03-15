@@ -1,5 +1,5 @@
 model:
-    arch: linknet
+    arch: segnet
 data:
     dataset: ade20k
     train_split: training

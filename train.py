@@ -67,9 +67,9 @@ def train(cfg, writer, logger):
     )
 
     n_classes = t_loader.n_classes
-    print(n_classes)
-    import sys
-    sys.exit(-1)
+    #print(n_classes)
+    #import sys
+    #sys.exit(-1)
     trainloader = data.DataLoader(
         t_loader,
         batch_size=cfg["training"]["batch_size"],
@@ -138,6 +138,7 @@ def train(cfg, writer, logger):
 
             optimizer.zero_grad()
             outputs = model(images)
+
 
             loss = loss_fn(input=outputs, target=labels)
 
